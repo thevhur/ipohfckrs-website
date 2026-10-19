@@ -647,11 +647,166 @@ document.addEventListener('DOMContentLoaded', function () {
                 ' | Normal: ' + data.normal_pax;
 
             const notice = document.createElement('p');
-            notice.textContent =
-                'Keep your booking reference. DuitNow payment and receipt upload will be enabled in the next step. Your booking is not yet confirmed.';
+notice.textContent =
+    'Booking created. Please pay the exact amount and upload your payment receipt. Your booking is not confirmed until payment is verified.';
 
-            result.append(heading, code, amount, paxDetails, notice);
-            result.style.display = 'block';
+const paymentTitle = document.createElement('h3');
+paymentTitle.textContent = 'PAYMENT DETAILS';
+paymentTitle.style.color = '#ed2525';
+
+const qrImage = document.createElement('img');
+qrImage.src = './duitnow-qr.png';
+qrImage.alt = 'IPOH FCKRS DuitNow QR';
+qrImage.style.cssText =
+    'display:block;width:100%;max-width:300px;height:auto;margin:20px auto;background:white;padding:10px;box-sizing:border-box;';
+
+const accountDetails = document.createElement('div');
+accountDetails.style.cssText =
+    'background:#151515;padding:18px;margin:20px 0;overflow-wrap:anywhere;';
+
+const accountTitle = document.createElement('p');
+accountTitle.textContent = 'ALTERNATIVE PAYMENT METHOD';
+accountTitle.style.color = '#ed2525';
+
+const accountNumber = document.createElement('p');
+accountNumber.textContent = 'Touch n Go Account: 180667512080';
+
+const accountName = document.createElement('p');
+accountName.textContent = 'Account Name: DANISH VAL HAKIM BIN NAZRI';
+
+const reference = document.createElement('p');
+reference.textContent =
+    'Payment Reference: ' + data.booking_code;
+
+const reminder = document.createElement('p');
+reminder.textContent =
+    'Please pay the exact amount shown above. Keep your receipt after payment.';
+
+accountDetails.append(
+    accountTitle,
+    accountNumber,
+    accountName,
+    reference,
+    reminder
+);
+
+const uploadTitle = document.createElement('h3');
+uploadTitle.textContent = 'UPLOAD PAYMENT RECEIPT';
+uploadTitle.style.color = '#ed2525';
+
+const uploadInfo = document.createElement('p');
+uploadInfo.textContent =
+    'Accepted formats: JPG, PNG or PDF. Maximum file size: 5 MB.';
+
+const receiptInput = document.createElement('input');
+receiptInput.type = 'file';
+receiptInput.accept = 'image/jpeg,image/png,application/pdf';
+receiptInput.required = true;
+receiptInput.style.cssText =
+    'display:block;width:100%;box-sizing:border-box;margin:15px 0;padding:12px;background:#151515;color:white;border:1px solid #444;';
+
+const uploadButton = document.createElement('button');
+uploadButton.type = 'button';
+uploadButton.textContent = 'SUBMIT PAYMENT RECEIPT';
+uploadButton.style.cssText =
+    'width:100%;padding:16px;background:#ed2525;color:white;border:none;font-weight:bold;cursor:pointer;';
+
+const uploadMessage = document.createElement('p');
+uploadMessage.style.lineHeight = '1.6';
+
+uploadButton.addEventListener('click', async function () {
+    const file = receiptInput.files[0];
+
+    if (!file) {
+        uploadMessage.textContent = 'Please select your payment receipt.';
+        return;
+    }
+
+    const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'application/pdf'
+    ];
+
+    if (!allowedTypes.includes(file.type) || file.size > 5 * 1024 * 1024) {
+        uploadMessage.textContent =
+            'Choose a JPG, PNG or PDF file no larger than 5 MB.';
+        return;
+    }
+
+    uploadButton.disabled = true;
+    uploadButton.textContent = 'UPLOADING...';
+    uploadMessage.textContent = 'Uploading receipt securely...';
+
+    try {
+        const fileName = crypto.randomUUID() +
+            '.' + (file.type === 'application/pdf' ? 'pdf' :
+            file.type === 'image/png' ? 'png' : 'jpg');
+
+        const filePath = data.booking_code + '/' + fileName;
+
+        const { error: uploadError } = await supabaseClient
+            .storage
+            .from('event-receipts')
+            .upload(filePath, file, {
+                upsert: false,
+                contentType: file.type
+            });
+
+        if (uploadError) {
+            throw uploadError;
+        }
+
+        const { data: submission, error: submitError } =
+            await supabaseClient.rpc('submit_event_receipt', {
+                p_booking_code: data.booking_code,
+                p_file_name: filePath
+            });
+
+        if (submitError) {
+            throw submitError;
+        }
+
+        if (!submission || !submission.success) {
+            throw new Error('Receipt submission was not confirmed.');
+        }
+
+        uploadMessage.textContent =
+            'Receipt submitted successfully. Your payment is pending manual verification. Keep booking reference: ' +
+            data.booking_code;
+
+        uploadButton.textContent = 'RECEIPT SUBMITTED';
+        receiptInput.disabled = true;
+
+    } catch (error) {
+        console.error('Receipt upload error:', error);
+
+        uploadMessage.textContent =
+            'Upload failed. Please try again. If it keeps failing, contact the organiser and quote booking reference ' +
+            data.booking_code;
+
+        uploadButton.disabled = false;
+        uploadButton.textContent = 'TRY UPLOAD AGAIN';
+    }
+});
+
+result.replaceChildren(
+    heading,
+    code,
+    amount,
+    paxDetails,
+    notice,
+    paymentTitle,
+    qrImage,
+    accountDetails,
+    uploadTitle,
+    uploadInfo,
+    receiptInput,
+    uploadButton,
+    uploadMessage
+);
+
+result.style.display = 'block';
 
             submitButton.textContent = 'BOOKING CREATED';
             submitButton.disabled = true;
