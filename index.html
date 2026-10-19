@@ -331,5 +331,103 @@ document.getElementById('adminLogout').addEventListener('click', async function(
     document.getElementById('adminPassword').value = '';
 });
 </script>
-</body>
+<script>
+document.getElementById('loadMembersBtn').addEventListener('click', loadMembers);
+
+async function loadMembers() {
+    const message = document.getElementById('memberMessage');
+    const list = document.getElementById('membersList');
+
+    message.textContent = 'Loading members...';
+    list.replaceChildren();
+
+    const { data: members, error } = await supabaseClient
+        .from('profiles')
+        .select('id, full_name, username, member_id, membership_status, created_at')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        message.textContent = 'Failed to load members: ' + error.message;
+        return;
+    }
+
+    if (!members || members.length === 0) {
+        message.textContent = 'No members found.';
+        return;
+    }
+
+    message.textContent = 'Total members: ' + members.length;
+
+    members.forEach(function(member) {
+        const card = document.createElement('div');
+
+        card.style.cssText =
+            'background:#181818;border:1px solid #333;padding:16px;margin-bottom:12px';
+
+        const name = document.createElement('h4');
+        name.style.color = '#fff';
+        name.textContent = member.full_name || 'No name provided';
+
+        const details = document.createElement('p');
+        details.style.cssText = 'color:#aaa;font-size:13px;line-height:1.8';
+        details.textContent =
+            'Username: ' + (member.username || '-') +
+            ' | ID: ' + (member.member_id || '-') +
+            ' | Status: ' + (member.membership_status || 'pending');
+
+        card.append(name, details);
+
+        if (member.membership_status === 'pending') {
+            const approve = document.createElement('button');
+            approve.type = 'button';
+            approve.textContent = 'APPROVE';
+            approve.style.cssText =
+                'background:#198754;color:white;border:0;padding:10px 14px;margin-right:8px;cursor:pointer';
+
+            approve.addEventListener('click', function() {
+                updateMemberStatus(member.id, 'approved');
+            });
+
+            const reject = document.createElement('button');
+            reject.type = 'button';
+            reject.textContent = 'REJECT';
+            reject.style.cssText =
+                'background:#ed2525;color:white;border:0;padding:10px 14px;cursor:pointer';
+
+            reject.addEventListener('click', function() {
+                updateMemberStatus(member.id, 'rejected');
+            });
+
+            card.append(approve, reject);
+        }
+
+        list.appendChild(card);
+    });
+}
+
+async function updateMemberStatus(memberId, status) {
+    const message = document.getElementById('memberMessage');
+
+    const action = status === 'approved' ? 'approve' : 'reject';
+
+    if (!confirm('Are you sure you want to ' + action + ' this member?')) {
+        return;
+    }
+
+    message.textContent = 'Updating membership...';
+
+    const { error } = await supabaseClient
+        .from('profiles')
+        .update({ membership_status: status })
+        .eq('id', memberId);
+
+    if (error) {
+        message.textContent = 'Update failed: ' + error.message;
+        return;
+    }
+
+    message.textContent = 'Membership updated successfully.';
+    await loadMembers();
+}
+</script></body>
 </html>
