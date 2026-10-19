@@ -255,6 +255,23 @@ console.log('IPOH FCKRS: Supabase connected');
 
     <div id="adminDashboard" style="display:none;margin-top:25px">
         <h3 style="color:#ed2525">ADMIN DASHBOARD</h3>
+        <div id="memberManagement" style="margin-top:25px;text-align:left">
+    <h3 style="color:#ed2525;letter-spacing:2px">
+        MEMBER MANAGEMENT
+    </h3>
+<p style="color:#aaa;font-size:13px;margin:10px 0 18px">
+    Manage membership applications.
+</p>
+<button
+    type="button"
+    id="loadMembersBtn"
+    style="padding:12px 18px;background:#ed2525;color:white;border:0;font-weight:bold;cursor:pointer"
+>
+    LOAD MEMBERS
+</button>
+<p id="memberMessage" style="margin-top:15px;color:#fff"></p>
+<div id="membersList" style="margin-top:15px;overflow-x:auto"></div>
+</div>
         <p style="margin-top:12px">Welcome, Admin.</p>
         <p style="margin-top:8px;color:#aaa">
             Admin authentication successful.
