@@ -86,5 +86,24 @@ footer strong{color:white}
 MORE THAN A MEET. IT'S A MOVEMENT.<br>
 © 2026 IPOH FCKRS. ALL RIGHTS RESERVED.
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL = https://ctzyfvpunxadihjyrvjo.supabase.co/rest/v1/;
+
+const SUPABASE_KEY = sb_publishable_UOV458gk9lgWz1s4pXQK3w_TMV5z1MS;
+
+const supabaseClient = window.supabase.createClient(
+
+    SUPABASE_URL,
+
+    SUPABASE_KEY
+
+);
+
+console.log('IPOH FCKRS: Supabase connected');
+
+</script>
 </body>
 </html>
