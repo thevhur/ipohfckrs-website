@@ -541,5 +541,132 @@ async function updateMemberStatus(memberId, status) {
         <div id="bookingResult" style="display:none;overflow-wrap:anywhere;"></div>
     </form>
 </section>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('eventBookingForm');
+
+    if (!form) return;
+
+    const paxInput = document.getElementById('bookingPax');
+    const message = document.getElementById('bookingMessage');
+    const result = document.getElementById('bookingResult');
+    const submitButton = document.getElementById('createBookingBtn');
+
+    document.getElementById('bookingTotal').textContent = '-';
+    document.getElementById('earlyBirdPax').textContent = '-';
+    document.getElementById('normalPax').textContent = '-';
+
+    paxInput.addEventListener('input', function () {
+        document.getElementById('bookingTotal').textContent = '-';
+        document.getElementById('earlyBirdPax').textContent = '-';
+        document.getElementById('normalPax').textContent = '-';
+    });
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        if (
+            typeof supabaseClient === 'undefined' ||
+            !supabaseClient
+        ) {
+            message.textContent =
+                'Connection error. Please refresh and try again.';
+            return;
+        }
+
+        const fullName = document.getElementById('bookingName').value.trim();
+        const phone = document.getElementById('bookingPhone').value.trim();
+        const email = document.getElementById('bookingEmail').value.trim();
+        const pax = Number(paxInput.value);
+
+        if (
+            !fullName ||
+            !phone ||
+            !email ||
+            !Number.isInteger(pax) ||
+            pax < 1 ||
+            pax > 20
+        ) {
+            message.textContent =
+                'Please complete all fields and enter 1-20 participants.';
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.textContent = 'CREATING BOOKING...';
+        message.textContent = 'Checking availability and calculating price...';
+        result.style.display = 'none';
+
+        try {
+            const { data, error } = await supabaseClient.rpc(
+                'create_event_booking',
+                {
+                    p_full_name: fullName,
+                    p_phone: phone,
+                    p_email: email,
+                    p_pax: pax
+                }
+            );
+
+            if (error) {
+                throw error;
+            }
+
+            if (!data || !data.success) {
+                throw new Error('Booking could not be created.');
+            }
+
+            document.getElementById('bookingTotal').textContent =
+                Number(data.total_amount).toFixed(2);
+
+            document.getElementById('earlyBirdPax').textContent =
+                data.early_bird_pax;
+
+            document.getElementById('normalPax').textContent =
+                data.normal_pax;
+
+            message.textContent = 'Booking created successfully!';
+
+            result.replaceChildren();
+
+            const heading = document.createElement('h3');
+            heading.textContent = 'YOUR BOOKING DETAILS';
+            heading.style.color = '#ed2525';
+
+            const code = document.createElement('p');
+            code.textContent = 'Booking Reference: ' + data.booking_code;
+
+            const amount = document.createElement('p');
+            amount.textContent =
+                'Amount Due: RM' + Number(data.total_amount).toFixed(2);
+
+            const paxDetails = document.createElement('p');
+            paxDetails.textContent =
+                'Participants: ' + data.pax +
+                ' | Early Bird: ' + data.early_bird_pax +
+                ' | Normal: ' + data.normal_pax;
+
+            const notice = document.createElement('p');
+            notice.textContent =
+                'Keep your booking reference. DuitNow payment and receipt upload will be enabled in the next step. Your booking is not yet confirmed.';
+
+            result.append(heading, code, amount, paxDetails, notice);
+            result.style.display = 'block';
+
+            submitButton.textContent = 'BOOKING CREATED';
+            submitButton.disabled = true;
+
+        } catch (error) {
+            console.error('Booking error:', error);
+
+            message.textContent =
+                'Booking failed. Please try again or contact the event organiser.';
+
+            submitButton.disabled = false;
+            submitButton.textContent = 'PROCEED TO BOOKING';
+        }
+    });
+});
+</script>
 </body>
 </html>
