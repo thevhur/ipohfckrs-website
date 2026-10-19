@@ -205,5 +205,114 @@ console.log('IPOH FCKRS: Supabase connected');
 console.log('IPOH FCKRS: Supabase connected');
 
 </script>
+    <!-- IPOH FCKRS ADMIN LOGIN -->
+<div style="text-align:center;padding:20px">
+    <button
+        onclick="document.getElementById('adminLoginPanel').style.display='block'"
+        style="background:none;color:#777;border:1px solid #333;padding:10px 20px;cursor:pointer;font-weight:bold"
+    >
+        ADMIN LOGIN
+    </button>
+</div>
+
+<div id="adminLoginPanel"
+     style="display:none;background:#111;border:1px solid #ed2525;padding:25px;margin:20px auto;max-width:450px">
+
+    <div style="color:#ed2525;font-weight:bold;letter-spacing:3px">
+        IPOH FCKRS
+    </div>
+
+    <h2 style="margin:15px 0">ADMIN ACCESS.</h2>
+
+    <form id="adminLoginForm">
+        <input
+            id="adminEmail"
+            type="email"
+            placeholder="Admin email"
+            autocomplete="username"
+            required
+            style="display:block;width:100%;padding:14px;margin-bottom:12px;background:#080808;color:white;border:1px solid #333"
+        >
+
+        <input
+            id="adminPassword"
+            type="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            required
+            style="display:block;width:100%;padding:14px;margin-bottom:15px;background:#080808;color:white;border:1px solid #333"
+        >
+
+        <button
+            type="submit"
+            style="width:100%;padding:15px;background:#ed2525;color:white;border:0;font-weight:bold"
+        >
+            LOGIN TO DASHBOARD
+        </button>
+    </form>
+
+    <p id="adminLoginMessage" style="margin-top:15px;color:#fff"></p>
+
+    <div id="adminDashboard" style="display:none;margin-top:25px">
+        <h3 style="color:#ed2525">ADMIN DASHBOARD</h3>
+        <p style="margin-top:12px">Welcome, Admin.</p>
+        <p style="margin-top:8px;color:#aaa">
+            Admin authentication successful.
+        </p>
+        <button
+            id="adminLogout"
+            style="margin-top:20px;padding:12px;background:#333;color:white;border:0"
+        >
+            LOGOUT
+        </button>
+    </div>
+</div>
+
+<script>
+document.getElementById('adminLoginForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    const message = document.getElementById('adminLoginMessage');
+    const dashboard = document.getElementById('adminDashboard');
+
+    message.textContent = 'Verifying admin access...';
+    dashboard.style.display = 'none';
+
+    const email = document.getElementById('adminEmail').value.trim();
+    const password = document.getElementById('adminPassword').value;
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
+
+    if (error) {
+        message.textContent = 'Login failed. Check your email and password.';
+        return;
+    }
+
+    const { data: profile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', data.user.id)
+        .single();
+
+    if (profileError || !profile || profile.is_admin !== true) {
+        await supabaseClient.auth.signOut();
+        message.textContent = 'Access denied. Admin account required.';
+        return;
+    }
+
+    message.textContent = 'Admin verified successfully.';
+    dashboard.style.display = 'block';
+});
+
+document.getElementById('adminLogout').addEventListener('click', async function() {
+    await supabaseClient.auth.signOut();
+    document.getElementById('adminDashboard').style.display = 'none';
+    document.getElementById('adminLoginMessage').textContent = 'You have logged out.';
+    document.getElementById('adminPassword').value = '';
+});
+</script>
 </body>
 </html>
