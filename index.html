@@ -846,5 +846,202 @@ result.style.display = 'block';
     });
 });
 </script>
+    <script>
+(function () {
+    const loadButton = document.getElementById('loadBookingsBtn');
+    const message = document.getElementById('bookingAdminMessage');
+    const list = document.getElementById('bookingAdminList');
+
+    if (!loadButton || !message || !list) return;
+
+    loadButton.addEventListener('click', loadBookings);
+
+    async function loadBookings() {
+        message.textContent = 'Loading bookings...';
+        list.replaceChildren();
+        loadButton.disabled = true;
+
+        try {
+            const { data: sessionData } =
+                await supabaseClient.auth.getSession();
+
+            if (!sessionData.session) {
+                throw new Error('Please log in to the admin account first.');
+            }
+
+            const { data: profile, error: profileError } =
+                await supabaseClient
+                    .from('profiles')
+                    .select('is_admin')
+                    .eq('id', sessionData.session.user.id)
+                    .single();
+
+            if (profileError || !profile || profile.is_admin !== true) {
+                throw new Error('Admin access required.');
+            }
+
+            const { data, error } = await supabaseClient
+                .from('event_bookings')
+                .select(
+                    'booking_code, full_name, phone, email, pax, early_bird_pax, normal_pax, total_amount, status, receipt_path, ticket_code, created_at'
+                )
+                .order('created_at', { ascending: false })
+                .limit(200);
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                message.textContent = 'No bookings found.';
+                return;
+            }
+
+            message.textContent =
+                'Loaded ' + data.length + ' booking(s).';
+
+            data.forEach(function (booking) {
+                const card = document.createElement('div');
+
+                card.style.cssText =
+                    'background:#151515;border:1px solid #333;padding:18px;margin:15px 0;overflow-wrap:anywhere;';
+
+                function addText(label, value) {
+                    const p = document.createElement('p');
+                    p.style.lineHeight = '1.6';
+                    p.textContent = label + ': ' +
+                        (value === null || value === undefined
+                            ? '-'
+                            : String(value));
+                    card.appendChild(p);
+                }
+
+                const title = document.createElement('h4');
+                title.style.color = '#ed2525';
+                title.textContent = booking.booking_code;
+                card.appendChild(title);
+
+                addText('Name', booking.full_name);
+                addText('Phone', booking.phone);
+                addText('Email', booking.email);
+                addText('Participants', booking.pax);
+                addText('Early Bird Pax', booking.early_bird_pax);
+                addText('Normal Pax', booking.normal_pax);
+                addText(
+                    'Total',
+                    'RM' + Number(booking.total_amount).toFixed(2)
+                );
+                addText('Status', booking.status);
+                addText('Created', booking.created_at);
+
+                if (booking.ticket_code) {
+                    addText('Ticket Code', booking.ticket_code);
+                }
+
+                if (booking.receipt_path) {
+                    const receiptButton =
+                        document.createElement('button');
+
+                    receiptButton.type = 'button';
+                    receiptButton.textContent = 'VIEW RECEIPT';
+
+                    receiptButton.style.cssText =
+                        'padding:12px;margin:8px 8px 8px 0;background:#333;color:white;border:1px solid #555;cursor:pointer;';
+
+                    receiptButton.addEventListener('click', async function () {
+                        receiptButton.disabled = true;
+
+                        try {
+                            const { data: fileData, error: fileError } =
+                                await supabaseClient.storage
+                                    .from('event-receipts')
+                                    .createSignedUrl(
+                                        booking.receipt_path,
+                                        60
+                                    );
+
+                            if (fileError) throw fileError;
+
+                            window.open(
+                                fileData.signedUrl,
+                                '_blank',
+                                'noopener,noreferrer'
+                            );
+                        } catch (error) {
+                            console.error(error);
+                            alert(
+                                'Unable to open receipt. Check admin access and storage policies.'
+                            );
+                        } finally {
+                            receiptButton.disabled = false;
+                        }
+                    });
+
+                    card.appendChild(receiptButton);
+                }
+
+                if (booking.status === 'pending_verification') {
+                    const approveButton =
+                        document.createElement('button');
+
+                    approveButton.type = 'button';
+                    approveButton.textContent = 'APPROVE PAYMENT';
+
+                    approveButton.style.cssText =
+                        'padding:12px;margin:8px 8px 8px 0;background:#ed2525;color:white;border:0;font-weight:bold;cursor:pointer;';
+
+                    approveButton.addEventListener('click', async function () {
+                        const confirmed = window.confirm(
+                            'Have you verified that the full payment is in your account for booking ' +
+                            booking.booking_code + '?'
+                        );
+
+                        if (!confirmed) return;
+
+                        approveButton.disabled = true;
+                        approveButton.textContent = 'APPROVING...';
+
+                        try {
+                            const { data: result, error: approveError } =
+                                await supabaseClient.rpc(
+                                    'approve_event_booking',
+                                    {
+                                        p_booking_code: booking.booking_code
+                                    }
+                                );
+
+                            if (approveError) throw approveError;
+
+                            alert(
+                                'Payment approved. Ticket code: ' +
+                                result.ticket_code
+                            );
+
+                            await loadBookings();
+                        } catch (error) {
+                            console.error(error);
+
+                            alert(
+                                'Approval failed. Please check the booking status and admin access.'
+                            );
+
+                            approveButton.disabled = false;
+                            approveButton.textContent = 'APPROVE PAYMENT';
+                        }
+                    });
+
+                    card.appendChild(approveButton);
+                }
+
+                list.appendChild(card);
+            });
+        } catch (error) {
+            console.error(error);
+            message.textContent =
+                error.message || 'Unable to load bookings.';
+        } finally {
+            loadButton.disabled = false;
+        }
+    }
+})();
+</script>
 </body>
 </html>
