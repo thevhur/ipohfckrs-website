@@ -430,5 +430,116 @@ async function updateMemberStatus(memberId, status) {
     await loadMembers();
 }
 </script>
+<!-- IPOH FCKRS DRIVE & CAMP 2026 BOOKING -->
+<section id="event-booking" style="
+    background:#0a0a0a;
+    color:#fff;
+    padding:40px 20px;
+    max-width:650px;
+    margin:40px auto;
+    border:1px solid #ed2525;
+    font-family:Arial,sans-serif;
+">
+    <p style="
+        color:#ed2525;
+        letter-spacing:4px;
+        font-weight:bold;
+    ">IPOH FCKRS PRESENTS</p>
+
+    <h2 style="font-size:32px;margin:10px 0;">
+        DRIVE & CAMP 2026
+    </h2>
+
+    <p style="color:#aaa;">
+        More Than A Car Meet.
+    </p>
+
+    <div style="
+        border:1px solid #333;
+        padding:18px;
+        margin:25px 0;
+    ">
+        <p>EARLY BIRD: <strong>RM150/PAX</strong></p>
+        <p>NORMAL PRICE: <strong>RM180/PAX</strong></p>
+        <p style="color:#ed2525;font-weight:bold;">
+            Early Bird limited to 100 pax!
+        </p>
+        <hr style="border-color:#333;">
+        <p>3 Days 2 Nights Stay</p>
+        <p>Tent Provided</p>
+        <p>BBQ Party</p>
+        <p>Hi-Tea x2</p>
+        <p>Breakfast x1</p>
+    </div>
+
+    <form id="eventBookingForm">
+        <label>Full Name</label>
+        <input
+            id="bookingName"
+            type="text"
+            required
+            maxlength="100"
+            autocomplete="name"
+            placeholder="Your full name"
+            style="display:block;width:100%;box-sizing:border-box;padding:14px;margin:8px 0 18px;background:#151515;color:white;border:1px solid #444;"
+        >
+
+        <label>Phone Number</label>
+        <input
+            id="bookingPhone"
+            type="tel"
+            required
+            maxlength="25"
+            autocomplete="tel"
+            placeholder="01X-XXXXXXX"
+            style="display:block;width:100%;box-sizing:border-box;padding:14px;margin:8px 0 18px;background:#151515;color:white;border:1px solid #444;"
+        >
+
+        <label>Email Address</label>
+        <input
+            id="bookingEmail"
+            type="email"
+            required
+            maxlength="254"
+            autocomplete="email"
+            placeholder="you@example.com"
+            style="display:block;width:100%;box-sizing:border-box;padding:14px;margin:8px 0 18px;background:#151515;color:white;border:1px solid #444;"
+        >
+
+        <label>Number of Participants</label>
+        <input
+            id="bookingPax"
+            type="number"
+            min="1"
+            max="20"
+            step="1"
+            value="1"
+            required
+            style="display:block;width:100%;box-sizing:border-box;padding:14px;margin:8px 0 18px;background:#151515;color:white;border:1px solid #444;"
+        >
+
+        <div style="background:#151515;padding:18px;margin:20px 0;">
+            <p>Early Bird Pax: <strong id="earlyBirdPax">1</strong></p>
+            <p>Normal Pax: <strong id="normalPax">0</strong></p>
+            <h3 style="color:#ed2525;">
+                TOTAL: RM<span id="bookingTotal">150</span>
+            </h3>
+            <p style="font-size:12px;color:#aaa;">
+                Final price and availability will be confirmed when your booking is created.
+            </p>
+        </div>
+
+        <button
+            type="submit"
+            id="createBookingBtn"
+            style="width:100%;padding:16px;background:#ed2525;color:white;border:none;font-weight:bold;letter-spacing:2px;cursor:pointer;"
+        >
+            PROCEED TO BOOKING
+        </button>
+
+        <p id="bookingMessage" style="line-height:1.6;"></p>
+        <div id="bookingResult" style="display:none;overflow-wrap:anywhere;"></div>
+    </form>
+</section>
 </body>
 </html>
