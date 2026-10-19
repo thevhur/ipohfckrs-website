@@ -162,7 +162,47 @@ const supabaseClient = window.supabase.createClient(
     SUPABASE_KEY
 
 );
+document.getElementById('registerForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
 
+    const message = document.getElementById('registerMessage');
+    const form = event.target;
+
+    const fullName = document.getElementById('fullName').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    message.textContent = 'Submitting your application...';
+
+    const { data, error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+            data: {
+                full_name: fullName,
+                username: username
+            }
+        }
+    });
+
+    if (error) {
+        message.textContent = 'Registration failed: ' + error.message;
+        return;
+    }
+
+    form.reset();
+
+    if (data.session) {
+        message.textContent =
+            'Registration successful! Your membership is pending admin approval.';
+    } else {
+        message.textContent =
+            'Registration submitted! Please check your email to confirm your account. Your membership is pending approval.';
+    }
+});
+
+console.log('IPOH FCKRS: Supabase connected');
 console.log('IPOH FCKRS: Supabase connected');
 
 </script>
