@@ -1076,5 +1076,66 @@ alert(
 <div id="ticketMessage" style="margin-top:15px;"></div>
 <div id="ticketList"></div>
 </section>
+    <script>
+document.getElementById('ticketLookupForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    const message = document.getElementById('ticketMessage');
+    const ticketList = document.getElementById('ticketList');
+
+    const bookingCode = document.getElementById('ticketBookingCode').value.trim();
+    const email = document.getElementById('ticketEmail').value.trim();
+
+    message.textContent = 'Checking your e-ticket...';
+    ticketList.replaceChildren();
+
+    try {
+        const { data, error } = await supabaseClient.rpc(
+            'get_booking_tickets',
+            {
+                p_booking_code: bookingCode,
+                p_email: email
+            }
+        );
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data || !data.ticket_code) {
+            message.textContent = 'Booking not found, or booking is not approved.';
+            return;
+        }
+
+        message.textContent = 'E-TICKET FOUND!';
+
+        const card = document.createElement('div');
+        card.style.cssText = 'background:#181818;border:1px solid #f22;padding:20px;margin-top:15px;color:white;';
+
+        const title = document.createElement('h3');
+        title.textContent = 'IPOH FCKRS E-TICKET';
+        title.style.color = '#f22';
+
+        const name = document.createElement('p');
+        name.textContent = 'Name: ' + data.full_name;
+
+        const code = document.createElement('p');
+        code.textContent = 'Ticket Code: ' + data.ticket_code;
+
+        const pax = document.createElement('p');
+        pax.textContent = 'Admission: ' + data.pax + ' person(s)';
+
+        const eventName = document.createElement('p');
+        eventName.textContent = 'DRIVE & CAMP 2026';
+
+        card.append(title, eventName, name, code, pax);
+        ticketList.appendChild(card);
+
+    } catch (error) {
+        console.error('E-ticket lookup error:', error);
+        message.textContent = 'Unable to check ticket. Please try again.';
+    }
+});
+</script>
 </body>
 </html>
