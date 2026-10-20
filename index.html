@@ -1051,7 +1051,30 @@ alert(
 <section id="myTickets" style="display:none; background:#111; color:white; padding:24px; margin:20px auto; max-width:600px; border:1px solid #f22;">
     <h2 style="color:#f22;">IPOH FCKRS E-TICKETS</h2>
     <p>DRIVE & CAMP 2026</p>
-    <div id="ticketList"></div>
+<form id="ticketLookupForm" style="margin-top:20px;">
+    <input
+        type="text"
+        id="ticketBookingCode"
+        placeholder="Booking Code"
+        required
+        style="width:100%;padding:12px;margin-bottom:12px;box-sizing:border-box;"
+    >
+<input
+    type="email"
+    id="ticketEmail"
+    placeholder="Email semasa booking"
+    required
+    style="width:100%;padding:12px;margin-bottom:12px;box-sizing:border-box;"
+>
+<button
+    type="submit"
+    style="width:100%;padding:12px;background:#f22;color:white;border:0;font-weight:bold;"
+>
+    CHECK MY E-TICKET
+</button>
+</form>
+<div id="ticketMessage" style="margin-top:15px;"></div>
+<div id="ticketList"></div>
 </section>
 </body>
 </html>
