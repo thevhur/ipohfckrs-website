@@ -1010,10 +1010,14 @@ result.style.display = 'block';
 
                             if (approveError) throw approveError;
 
-                            alert(
-                                'Payment approved. Ticket code: ' +
-                                result.ticket_code
-                            );
+                            const ticketCodes = result.ticket_codes || [];
+
+alert(
+    'Payment approved!\n' +
+    'Booking: ' + result.booking_code + '\n' +
+    'Tickets created: ' + result.tickets_created + '\n\n' +
+    'Ticket codes:\n' + ticketCodes.join('\n')
+);
 
                             await loadBookings();
                         } catch (error) {
